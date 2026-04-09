@@ -1,0 +1,258 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================
+// User
+// ===========================
+
+model User {
+  id                String   @id @default(cuid())
+  email             String   @unique @db.VarChar(255)
+  name              String   @db.VarChar(100)
+  avatarUrl         String?  @map("avatar_url") @db.Text
+  googleId          String   @unique @map("google_id") @db.VarChar(255)
+  refreshTokenHash  String?  @map("refresh_token_hash") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  plans     StudyPlan[]
+  sessions  StudySession[]
+  reviews   Review[]
+  preChecks PreCheck[]
+  feedback  Feedback[]
+
+  @@map("users")
+}
+
+// ===========================
+// Study Plan
+// ===========================
+
+model StudyPlan {
+  id             String  @id @default(cuid())
+  userId         String  @map("user_id") @db.VarChar(30)
+  title          String  @db.VarChar(200)
+  status         String  @default("draft") @db.VarChar(20)  // draft | active | completed | archived
+  params         Json?   @db.JsonB                            // PlanParams (see TypeScript interface below)
+  generationMode String? @map("generation_mode") @db.VarChar(20) // basic | detailed
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goals     MacroGoal[]
+  feedback  Feedback[]
+
+  @@index([userId, status], map: "idx_plans_user_status")
+  @@map("study_plans")
+}
+
+// ===========================
+// Macro Goal
+// ===========================
+
+model MacroGoal {
+  id          String  @id @default(cuid())
+  planId      String  @map("plan_id") @db.VarChar(30)
+  title       String  @db.VarChar(200)
+  description String? @db.Text
+  order       Int     @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  plan       StudyPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  milestones Milestone[]
+
+  @@index([planId, order], map: "idx_goals_plan_order")
+  @@map("macro_goals")
+}
+
+// ===========================
+// Milestone
+// ===========================
+
+model Milestone {
+  id          String  @id @default(cuid())
+  goalId      String  @map("goal_id") @db.VarChar(30)
+  title       String  @db.VarChar(200)
+  description String? @db.Text
+  targetDate  DateTime? @map("target_date") @db.Date
+  status      String  @default("pending") @db.VarChar(20) // pending | in_progress | completed
+  order       Int     @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  goal  MacroGoal  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  nodes TodoNode[]
+
+  @@index([goalId, order], map: "idx_milestones_goal_order")
+  @@map("milestones")
+}
+
+// ===========================
+// Todo Node (Kanban Card)
+// ===========================
+
+model TodoNode {
+  id               String  @id @default(cuid())
+  milestoneId      String  @map("milestone_id") @db.VarChar(30)
+  title            String  @db.VarChar(300)
+  status           String  @default("todo") @db.VarChar(20)  // todo | in_progress | done
+  order            Int     @default(0)
+  estimatedMinutes Int?    @map("estimated_minutes")
+  generationBasis  String? @map("generation_basis") @db.VarChar(20) // volume_based | structure_based
+  studyGuide       Json?   @map("study_guide") @db.JsonB              // StudyGuide (see TypeScript interface)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  milestone Milestone      @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  sessions  StudySession[]
+  reviews   Review[]
+  feedback  Feedback[]
+
+  @@index([milestoneId, status], map: "idx_nodes_milestone_status")
+  @@index([milestoneId, order], map: "idx_nodes_milestone_order")
+  @@map("todo_nodes")
+}
+
+// ===========================
+// Study Session
+// ===========================
+
+model StudySession {
+  id              String   @id @default(cuid())
+  nodeId          String   @map("node_id") @db.VarChar(30)
+  userId          String   @map("user_id") @db.VarChar(30)
+  timerType       String   @map("timer_type") @db.VarChar(20) // pomodoro | stopwatch
+  startTime       DateTime @map("start_time")
+  endTime         DateTime? @map("end_time")
+  durationMinutes Int?     @map("duration_minutes")
+  status          String   @default("active") @db.VarChar(20) // active | paused | completed
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  node      TodoNode     @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs      SessionLog[]
+  preChecks PreCheck[]
+
+  @@index([nodeId], map: "idx_sessions_node")
+  @@index([userId, startTime], map: "idx_sessions_user_date")
+  @@index([nodeId, status], map: "idx_sessions_node_status")
+  @@map("study_sessions")
+}
+
+// ===========================
+// Session Log
+// ===========================
+
+model SessionLog {
+  id                String  @id @default(cuid())
+  sessionId         String  @map("session_id") @db.VarChar(30)
+  progressPercent   Int?    @map("progress_percent")   // 0-100
+  focusLevel        Int?    @map("focus_level")        // 1-5
+  distractionType   String? @map("distraction_type") @db.VarChar(20) // internal | external | none
+  distractionDetail String? @map("distraction_detail") @db.Text
+  note              String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  session StudySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId], map: "idx_logs_session")
+  @@map("session_logs")
+}
+
+// ===========================
+// Review
+// ===========================
+
+model Review {
+  id           String  @id @default(cuid())
+  nodeId       String  @map("node_id") @db.VarChar(30)
+  userId       String  @map("user_id") @db.VarChar(30)
+  reflection   String? @db.Text   // 학습 회고
+  difficulty   String? @db.Text   // 어려웠던 점
+  distraction  String? @db.Text   // 방해 요소
+  improvement  String? @db.Text   // 다음 보완점
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  node TodoNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId], map: "idx_reviews_node")
+  @@map("reviews")
+}
+
+// ===========================
+// Feedback
+// ===========================
+
+model Feedback {
+  id                 String  @id @default(cuid())
+  nodeId             String? @map("node_id") @db.VarChar(30)  // node scope
+  planId             String? @map("plan_id") @db.VarChar(30)  // plan scope
+  userId             String  @map("user_id") @db.VarChar(30)
+  scope              String  @db.VarChar(10)                    // node | plan
+  summary            String  @db.Text
+  progressAnalysis   Json?   @map("progress_analysis") @db.JsonB // ProgressAnalysis
+  suggestions        Json?   @db.JsonB                           // string[]
+  motivationMessage  String? @map("motivation_message") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  node TodoNode?  @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  plan StudyPlan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([nodeId], map: "idx_feedback_node")
+  @@index([planId], map: "idx_feedback_plan")
+  @@index([userId], map: "idx_feedback_user")
+  @@map("feedback")
+}
+
+// ===========================
+// Pre-Check (P1)
+// ===========================
+
+model PreCheck {
+  id                 String   @id @default(cuid())
+  userId             String   @map("user_id") @db.VarChar(30)
+  sessionId          String?  @map("session_id") @db.VarChar(30)
+  mentalReady        Boolean  @default(false) @map("mental_ready")
+  environmentReady   Boolean  @default(false) @map("environment_ready")
+  noiseBlocked       Boolean  @default(false) @map("noise_blocked")
+  noDistraction      Boolean  @default(false) @map("no_distraction")
+  noConflictSchedule Boolean  @default(false) @map("no_conflict_schedule")
+  warmupNote         String?  @map("warmup_note") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session StudySession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt], map: "idx_prechecks_user_date")
+  @@map("pre_checks")
+}
