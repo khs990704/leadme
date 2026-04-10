@@ -75,7 +75,7 @@ router.get(
   validate(paginationQuerySchema, 'query'),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const query = req.query as unknown as {
+      const query = (req as any)._parsed_query as {
         page: number;
         limit: number;
         sort: string;
@@ -104,7 +104,7 @@ router.get(
   validate(paginationQuerySchema, 'query'),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const query = req.query as unknown as {
+      const query = (req as any)._parsed_query as {
         page: number;
         limit: number;
         sort: string;

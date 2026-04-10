@@ -83,9 +83,18 @@ export function FocusTimer({ nodeId }: FocusTimerProps) {
     }
   }, [sessionId, pauseTimer, resumeTimer, updateSession]);
 
-  const handleResume = useCallback(() => {
+  const handleResume = useCallback(async () => {
+    if (!sessionId) return;
     resumeTimer();
-  }, [resumeTimer]);
+    try {
+      await updateSession.mutateAsync({
+        sessionId,
+        data: { status: 'active' },
+      });
+    } catch {
+      pauseTimer();
+    }
+  }, [sessionId, resumeTimer, pauseTimer, updateSession]);
 
   const handleStop = useCallback(async () => {
     if (!sessionId) return;

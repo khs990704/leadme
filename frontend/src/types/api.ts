@@ -342,7 +342,7 @@ export interface SessionResponse {
 }
 
 export interface UpdateSessionRequest {
-  status: 'paused' | 'completed';
+  status: 'active' | 'paused' | 'completed';
   endTime?: string;
 }
 

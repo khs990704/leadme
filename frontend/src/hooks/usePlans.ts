@@ -44,42 +44,42 @@ export function useCreatePlan() {
   });
 }
 
-export function useUpdatePlanParams(planId: string) {
+export function useUpdatePlanParams() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: UpdatePlanParamsRequest) => {
+    mutationFn: async ({ planId, ...data }: UpdatePlanParamsRequest & { planId: string }) => {
       const response = await plansService.updateParams(planId, data);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plans', planId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['plans', variables.planId] });
     },
   });
 }
 
-export function useGeneratePlan(planId: string) {
+export function useGeneratePlan() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: GeneratePlanRequest) => {
+    mutationFn: async ({ planId, ...data }: GeneratePlanRequest & { planId: string }) => {
       const response = await plansService.generate(planId, data);
       return response.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plans', planId] });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['plans', variables.planId] });
     },
   });
 }
 
-export function useConfirmPlan(planId: string) {
+export function useConfirmPlan() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ planId }: { planId: string }) => {
       const response = await plansService.confirm(planId);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['plans'] });
-      queryClient.invalidateQueries({ queryKey: ['plans', planId] });
+      queryClient.invalidateQueries({ queryKey: ['plans', variables.planId] });
     },
   });
 }

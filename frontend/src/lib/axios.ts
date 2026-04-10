@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { RefreshResponse } from '@/types/api';
+import { useAuthStore } from '@/stores/authStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
@@ -8,7 +9,20 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000,
+  timeout: 180000,
+  paramsSerializer: {
+    serialize: (params) => {
+      const searchParams = new URLSearchParams();
+      for (const [key, value] of Object.entries(params)) {
+        if (Array.isArray(value)) {
+          searchParams.append(key, value.join(','));
+        } else if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      }
+      return searchParams.toString();
+    },
+  },
 });
 
 let isRefreshing = false;
@@ -40,10 +54,17 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const errorCode = error.response?.data?.error?.code;
+
+    if (error.response?.status === 401 && errorCode !== 'TOKEN_EXPIRED') {
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
 
     if (
       error.response?.status === 401 &&
-      error.response?.data?.error?.code === 'TOKEN_EXPIRED' &&
+      errorCode === 'TOKEN_EXPIRED' &&
       !originalRequest._retry
     ) {
       if (isRefreshing) {

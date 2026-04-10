@@ -85,7 +85,7 @@ export async function createSession(
 export async function updateSession(
   sessionId: string,
   userId: string,
-  data: { status: 'paused' | 'completed'; endTime?: string },
+  data: { status: 'active' | 'paused' | 'completed'; endTime?: string },
 ) {
   const session = await prisma.studySession.findUnique({
     where: { id: sessionId },

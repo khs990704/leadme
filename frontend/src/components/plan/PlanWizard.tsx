@@ -125,9 +125,9 @@ export function PlanWizard() {
   const [preview, setPreview] = useState<GeneratePlanResponse | null>(null);
 
   const createPlan = useCreatePlan();
-  const updateParams = useUpdatePlanParams(planId ?? '');
-  const generatePlan = useGeneratePlan(planId ?? '');
-  const confirmPlan = useConfirmPlan(planId ?? '');
+  const updateParams = useUpdatePlanParams();
+  const generatePlan = useGeneratePlan();
+  const confirmPlan = useConfirmPlan();
 
   const questions = phase === 'secondary' ? SECONDARY_QUESTIONS : PRIMARY_QUESTIONS;
   const currentQuestion = questions[step];
@@ -194,10 +194,10 @@ export function PlanWizard() {
         setPlanId(currentPlanId);
       }
 
-      await updateParams.mutateAsync(buildParams(answers));
+      await updateParams.mutateAsync({ planId: currentPlanId, ...buildParams(answers) });
 
       const mode = previousPhase === 'secondary' ? 'detailed' : 'basic';
-      const result = await generatePlan.mutateAsync({ mode });
+      const result = await generatePlan.mutateAsync({ planId: currentPlanId, mode });
 
       setPreview(result);
       setPhase('preview');
@@ -225,7 +225,7 @@ export function PlanWizard() {
   const handleConfirm = useCallback(async () => {
     if (!planId) return;
     try {
-      await confirmPlan.mutateAsync();
+      await confirmPlan.mutateAsync({ planId });
       navigate(`/plans/${planId}/kanban`);
     } catch {
       // error handled by TanStack Query
@@ -238,10 +238,11 @@ export function PlanWizard() {
   }, []);
 
   const handleRegenerate = useCallback(async () => {
+    if (!planId) return;
     setPhase('generating');
     try {
       const mode = phase === 'preview' && preview?.generationMode === 'detailed' ? 'detailed' : 'basic';
-      const result = await generatePlan.mutateAsync({ mode });
+      const result = await generatePlan.mutateAsync({ planId, mode });
       setPreview(result);
       setPhase('preview');
     } catch {
@@ -254,7 +255,7 @@ export function PlanWizard() {
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         <p className="text-muted-foreground">AI가 학습 계획을 생성하고 있습니다...</p>
-        <p className="text-xs text-muted-foreground">최대 15초 정도 소요될 수 있습니다.</p>
+        <p className="text-xs text-muted-foreground">최대 1~2분 정도 소요될 수 있습니다.</p>
       </div>
     );
   }

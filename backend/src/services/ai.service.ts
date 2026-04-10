@@ -6,7 +6,7 @@ import { buildStructurerPrompt } from '../prompts/structurer.js';
 import { PlanParams } from '../types/index.js';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const REQUEST_TIMEOUT = 15000; // 15 seconds
+const REQUEST_TIMEOUT = 180000; // 180 seconds (free models can be slow)
 
 interface OpenRouterMessage {
   role: 'system' | 'user' | 'assistant';
@@ -40,6 +40,7 @@ async function callOpenRouter(messages: OpenRouterMessage[], temperature = 0.7):
         temperature,
         max_tokens: 4096,
         response_format: { type: 'json_object' },
+        reasoning: { effort: 'none' },
       }),
       signal: controller.signal,
     });

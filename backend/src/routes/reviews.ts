@@ -87,7 +87,7 @@ router.get(
       const nodeId = req.params.nodeId as string;
       await verifyNodeOwnership(nodeId, req.user!.userId);
 
-      const query = req.query as unknown as {
+      const query = (req as any)._parsed_query as {
         page: number;
         limit: number;
         sort: string;

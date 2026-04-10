@@ -14,8 +14,10 @@ export function validate(
       // Replace with parsed (and transformed) data
       if (target === 'body') {
         req.body = data;
-      } else if (target === 'query') {
-        (req as unknown as Record<string, unknown>).query = data;
+      } else if (target === 'query' || target === 'params') {
+        // Express 5: req.query and req.params are read-only getters
+        // Store parsed data on a custom property instead
+        (req as unknown as Record<string, unknown>)[`_parsed_${target}`] = data;
       }
       next();
     } catch (err) {

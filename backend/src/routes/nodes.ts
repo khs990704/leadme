@@ -47,7 +47,7 @@ router.get(
   validate(getNodesQuerySchema, 'query'),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const query = req.query as unknown as {
+      const query = (req as any)._parsed_query as {
         milestoneId?: string;
         status?: string | string[];
       };

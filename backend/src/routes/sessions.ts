@@ -18,7 +18,7 @@ const createSessionSchema = z.object({
 
 const updateSessionSchema = z
   .object({
-    status: z.enum(['paused', 'completed']),
+    status: z.enum(['active', 'paused', 'completed']),
     endTime: z.string().datetime().optional(),
   })
   .refine(
@@ -108,7 +108,7 @@ router.get(
   validate(paginationQuerySchema, 'query'),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const query = req.query as unknown as {
+      const query = (req as any)._parsed_query as {
         page: number;
         limit: number;
         sort: string;
