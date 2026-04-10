@@ -4,18 +4,18 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
-import { env } from './config/env.js';
-import { errorHandler, notFoundHandler } from './middleware/error.js';
+import { env } from './config/env';
+import { errorHandler, notFoundHandler } from './middleware/error';
 
 // Route imports
-import authRoutes from './routes/auth.js';
-import planRoutes from './routes/plans.js';
-import goalRoutes from './routes/goals.js';
-import milestoneRoutes from './routes/milestones.js';
-import nodeRoutes from './routes/nodes.js';
-import sessionRoutes from './routes/sessions.js';
-import reviewRoutes from './routes/reviews.js';
-import feedbackRoutes from './routes/feedback.js';
+import authRoutes from './routes/auth';
+import planRoutes from './routes/plans';
+import goalRoutes from './routes/goals';
+import milestoneRoutes from './routes/milestones';
+import nodeRoutes from './routes/nodes';
+import sessionRoutes from './routes/sessions';
+import reviewRoutes from './routes/reviews';
+import feedbackRoutes from './routes/feedback';
 
 const app = express();
 

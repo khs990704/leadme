@@ -1,9 +1,9 @@
 import { Router, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { authenticate } from '../middleware/auth.js';
-import { validate } from '../middleware/validate.js';
-import { AuthenticatedRequest } from '../types/index.js';
-import * as sessionService from '../services/session.service.js';
+import { authenticate } from '../middleware/auth';
+import { validate } from '../middleware/validate';
+import { AuthenticatedRequest } from '../types/index';
+import * as sessionService from '../services/session.service';
 
 const router = Router();
 

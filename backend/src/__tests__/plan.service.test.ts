@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { calculateParamCompleteness } from '../services/plan.service.js';
-import type { PlanParams } from '../types/index.js';
+import { calculateParamCompleteness } from '../services/plan.service';
+import type { PlanParams } from '../types/index';
 
 // ===========================
 // calculateParamCompleteness

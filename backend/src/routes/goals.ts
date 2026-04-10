@@ -1,10 +1,10 @@
 import { Router, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { authenticate } from '../middleware/auth.js';
-import { validate } from '../middleware/validate.js';
-import { prisma } from '../lib/prisma.js';
-import { AppError, AuthenticatedRequest } from '../types/index.js';
-import { verifyPlanOwnership } from '../services/plan.service.js';
+import { authenticate } from '../middleware/auth';
+import { validate } from '../middleware/validate';
+import { prisma } from '../lib/prisma';
+import { AppError, AuthenticatedRequest } from '../types/index';
+import { verifyPlanOwnership } from '../services/plan.service';
 
 const router = Router();
 

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodSchema, ZodError } from 'zod';
-import { AppError } from '../types/index.js';
+import { AppError } from '../types/index';
 
 type ValidationTarget = 'body' | 'query' | 'params';
 

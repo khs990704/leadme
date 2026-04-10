@@ -1,6 +1,6 @@
-import { prisma } from '../lib/prisma.js';
-import { AppError, PlanParams, ParamCompleteness, PlanStatus } from '../types/index.js';
-import { generatePlan } from './ai.service.js';
+import { prisma } from '../lib/prisma';
+import { AppError, PlanParams, ParamCompleteness, PlanStatus } from '../types/index';
+import { generatePlan } from './ai.service';
 
 // ===========================
 // Param Completeness Calculation

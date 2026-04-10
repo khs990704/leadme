@@ -76,7 +76,7 @@ docker ps | grep leadme-postgres
 4. **사용자 인증 정보** → **OAuth 클라이언트 ID** 생성
    - 유형: 웹 애플리케이션
    - 승인된 자바스크립트 원본: `http://localhost:5173`
-   - 승인된 리디렉션 URI: `http://localhost:3001/api/v1/auth/google/callback`
+   - 승인된 리디렉션 URI: `http://localhost:5173/login/callback`
 5. 생성된 **클라이언트 ID**와 **클라이언트 시크릿**을 메모
 
 ### 4. 환경변수 설정

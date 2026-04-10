@@ -1,5 +1,5 @@
-import { prisma } from '../lib/prisma.js';
-import { AppError, NodeStatus } from '../types/index.js';
+import { prisma } from '../lib/prisma';
+import { AppError, NodeStatus } from '../types/index';
 
 // ===========================
 // Status Transition Rules
