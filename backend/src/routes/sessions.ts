@@ -87,7 +87,7 @@ router.patch(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await sessionService.updateSession(
-        req.params.sessionId,
+        req.params.sessionId as string,
         req.user!.userId,
         req.body,
       );
@@ -116,7 +116,7 @@ router.get(
       };
 
       const result = await sessionService.getNodeSessions(
-        req.params.nodeId,
+        req.params.nodeId as string,
         req.user!.userId,
         query,
       );
@@ -138,7 +138,7 @@ router.post(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await sessionService.createSessionLog(
-        req.params.sessionId,
+        req.params.sessionId as string,
         req.user!.userId,
         req.body,
       );

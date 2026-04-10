@@ -83,7 +83,7 @@ router.get(
       };
 
       const result = await feedbackService.getNodeFeedback(
-        req.params.nodeId,
+        req.params.nodeId as string,
         req.user!.userId,
         query,
       );
@@ -112,7 +112,7 @@ router.get(
       };
 
       const result = await feedbackService.getPlanFeedback(
-        req.params.planId,
+        req.params.planId as string,
         req.user!.userId,
         query,
       );

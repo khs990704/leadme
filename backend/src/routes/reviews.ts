@@ -43,11 +43,12 @@ router.post(
   validate(createReviewSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      await verifyNodeOwnership(req.params.nodeId, req.user!.userId);
+      const nodeId = req.params.nodeId as string;
+      await verifyNodeOwnership(nodeId, req.user!.userId);
 
       const review = await prisma.review.create({
         data: {
-          nodeId: req.params.nodeId,
+          nodeId,
           userId: req.user!.userId,
           reflection: req.body.reflection ?? null,
           difficulty: req.body.difficulty ?? null,
@@ -83,7 +84,8 @@ router.get(
   validate(paginationQuerySchema, 'query'),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      await verifyNodeOwnership(req.params.nodeId, req.user!.userId);
+      const nodeId = req.params.nodeId as string;
+      await verifyNodeOwnership(nodeId, req.user!.userId);
 
       const query = req.query as unknown as {
         page: number;
@@ -92,7 +94,7 @@ router.get(
         order: 'asc' | 'desc';
       };
 
-      const where = { nodeId: req.params.nodeId };
+      const where = { nodeId };
 
       const [reviews, total] = await Promise.all([
         prisma.review.findMany({
@@ -139,8 +141,9 @@ router.put(
   validate(createReviewSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const reviewId = req.params.reviewId as string;
       const review = await prisma.review.findUnique({
-        where: { id: req.params.reviewId },
+        where: { id: reviewId },
       });
 
       if (!review) throw new AppError(404, 'NOT_FOUND', 'Review not found');
@@ -149,7 +152,7 @@ router.put(
       }
 
       const updated = await prisma.review.update({
-        where: { id: req.params.reviewId },
+        where: { id: reviewId },
         data: {
           reflection: req.body.reflection ?? review.reflection,
           difficulty: req.body.difficulty ?? review.difficulty,

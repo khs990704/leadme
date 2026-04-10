@@ -30,13 +30,13 @@ const refreshSchema = z.object({
 function generateAccessToken(payload: JwtPayload): string {
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
     expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-  });
+  } as jwt.SignOptions);
 }
 
 function generateRefreshToken(payload: JwtPayload): string {
   return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
     expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-  });
+  } as jwt.SignOptions);
 }
 
 async function hashToken(token: string): Promise<string> {

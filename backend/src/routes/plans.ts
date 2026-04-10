@@ -114,7 +114,7 @@ router.get(
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const result = await planService.getPlanDetail(req.params.planId, req.user!.userId);
+      const result = await planService.getPlanDetail(req.params.planId as string, req.user!.userId);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -133,7 +133,7 @@ router.patch(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await planService.updatePlanParams(
-        req.params.planId,
+        req.params.planId as string,
         req.user!.userId,
         req.body,
       );
@@ -155,7 +155,7 @@ router.post(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await planService.generatePlanContent(
-        req.params.planId,
+        req.params.planId as string,
         req.user!.userId,
         req.body.mode,
       );
@@ -175,7 +175,7 @@ router.put(
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      const result = await planService.confirmPlan(req.params.planId, req.user!.userId);
+      const result = await planService.confirmPlan(req.params.planId as string, req.user!.userId);
       res.status(200).json(result);
     } catch (err) {
       next(err);
@@ -192,7 +192,7 @@ router.delete(
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      await planService.deletePlan(req.params.planId, req.user!.userId);
+      await planService.deletePlan(req.params.planId as string, req.user!.userId);
       res.status(204).send();
     } catch (err) {
       next(err);

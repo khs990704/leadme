@@ -53,7 +53,7 @@ router.get(
       };
 
       const result = await nodeService.getNodesByPlan(
-        req.params.planId,
+        req.params.planId as string,
         req.user!.userId,
         query,
       );
@@ -74,7 +74,7 @@ router.get(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await nodeService.getNodeDetail(
-        req.params.nodeId,
+        req.params.nodeId as string,
         req.user!.userId,
       );
       res.status(200).json(result);
@@ -95,7 +95,7 @@ router.patch(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await nodeService.updateNodeStatus(
-        req.params.nodeId,
+        req.params.nodeId as string,
         req.user!.userId,
         req.body.status,
       );
@@ -117,7 +117,7 @@ router.patch(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await nodeService.updateNodeOrder(
-        req.params.nodeId,
+        req.params.nodeId as string,
         req.user!.userId,
         req.body.order,
         req.body.status,
@@ -140,7 +140,7 @@ router.put(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
       const result = await nodeService.updateNode(
-        req.params.nodeId,
+        req.params.nodeId as string,
         req.user!.userId,
         req.body,
       );

@@ -50,6 +50,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
 
+  setLoading: (loading) => {
+    set({ isLoading: loading });
+  },
+
   hydrateFromStorage: () => {
     const accessToken = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');

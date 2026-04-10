@@ -21,7 +21,7 @@ export function errorHandler(
   }
 
   // Prisma known errors
-  if ((err as Record<string, unknown>).code === 'P2025') {
+  if ((err as unknown as Record<string, unknown>).code === 'P2025') {
     res.status(404).json({
       error: {
         code: 'NOT_FOUND',

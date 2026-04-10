@@ -9,12 +9,18 @@ export interface JwtPayload {
   email: string;
 }
 
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-  };
+declare global {
+  namespace Express {
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    interface User {
+      [key: string]: unknown;
+      userId: string;
+      email: string;
+    }
+  }
 }
+
+export type AuthenticatedRequest = Request;
 
 // ===========================
 // Enum Types

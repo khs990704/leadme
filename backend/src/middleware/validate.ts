@@ -15,7 +15,7 @@ export function validate(
       if (target === 'body') {
         req.body = data;
       } else if (target === 'query') {
-        (req as Record<string, unknown>).query = data;
+        (req as unknown as Record<string, unknown>).query = data;
       }
       next();
     } catch (err) {

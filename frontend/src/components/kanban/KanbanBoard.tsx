@@ -24,7 +24,7 @@ interface KanbanBoardProps {
 
 const STATUSES: NodeStatus[] = ['todo', 'in_progress', 'done'];
 
-export function KanbanBoard({ nodes, milestones, isLoading, planId }: KanbanBoardProps) {
+export function KanbanBoard({ nodes, milestones, isLoading, planId: _planId }: KanbanBoardProps) {
   const [milestoneFilter, setMilestoneFilter] = useState<string | null>(null);
   const updateStatus = useUpdateNodeStatus();
   const updateOrder = useUpdateNodeOrder();

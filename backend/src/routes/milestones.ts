@@ -34,8 +34,9 @@ router.get(
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const goalId = req.params.goalId as string;
       const goal = await prisma.macroGoal.findUnique({
-        where: { id: req.params.goalId },
+        where: { id: goalId },
         include: {
           plan: { select: { userId: true } },
         },
@@ -47,7 +48,7 @@ router.get(
       }
 
       const milestones = await prisma.milestone.findMany({
-        where: { goalId: req.params.goalId },
+        where: { goalId },
         orderBy: { order: 'asc' },
         include: {
           nodes: {
@@ -90,8 +91,9 @@ router.put(
   validate(updateMilestoneSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const milestoneId = req.params.milestoneId as string;
       const milestone = await prisma.milestone.findUnique({
-        where: { id: req.params.milestoneId },
+        where: { id: milestoneId },
         include: {
           goal: {
             include: {
@@ -116,7 +118,7 @@ router.put(
       }
 
       const updated = await prisma.milestone.update({
-        where: { id: req.params.milestoneId },
+        where: { id: milestoneId },
         data: updateData,
       });
 

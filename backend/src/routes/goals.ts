@@ -30,10 +30,11 @@ router.get(
   authenticate,
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-      await verifyPlanOwnership(req.params.planId, req.user!.userId);
+      const planId = req.params.planId as string;
+      await verifyPlanOwnership(planId, req.user!.userId);
 
       const goals = await prisma.macroGoal.findMany({
-        where: { planId: req.params.planId },
+        where: { planId },
         orderBy: { order: 'asc' },
         include: {
           milestones: {
@@ -87,8 +88,9 @@ router.put(
   validate(updateGoalSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
+      const goalId = req.params.goalId as string;
       const goal = await prisma.macroGoal.findUnique({
-        where: { id: req.params.goalId },
+        where: { id: goalId },
         include: {
           plan: { select: { userId: true } },
         },
@@ -100,7 +102,7 @@ router.put(
       }
 
       const updated = await prisma.macroGoal.update({
-        where: { id: req.params.goalId },
+        where: { id: goalId },
         data: req.body,
       });
 

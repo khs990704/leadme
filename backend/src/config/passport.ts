@@ -28,7 +28,7 @@ export function configurePassport(): void {
           });
 
           if (existingUser) {
-            return done(null, existingUser);
+            return done(null, { userId: existingUser.id, email: existingUser.email });
           }
 
           const newUser = await prisma.user.create({
@@ -40,7 +40,7 @@ export function configurePassport(): void {
             },
           });
 
-          return done(null, newUser);
+          return done(null, { userId: newUser.id, email: newUser.email });
         } catch (err) {
           return done(err as Error);
         }
