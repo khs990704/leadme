@@ -9,9 +9,10 @@ import type { TimerType } from '@/types/api';
 
 interface FocusTimerProps {
   nodeId: string;
+  estimatedMinutes?: number | string | null;
 }
 
-export function FocusTimer({ nodeId }: FocusTimerProps) {
+export function FocusTimer({ nodeId, estimatedMinutes }: FocusTimerProps) {
   const {
     timerType,
     status,
@@ -19,6 +20,7 @@ export function FocusTimer({ nodeId }: FocusTimerProps) {
     sessionId,
     pomodoroPhase,
     setTimerType,
+    setPomodoroDuration,
     startTimer,
     pauseTimer,
     resumeTimer,
@@ -47,6 +49,12 @@ export function FocusTimer({ nodeId }: FocusTimerProps) {
       }
     };
   }, [status, tick]);
+
+  useEffect(() => {
+    if (status === 'idle') {
+      setPomodoroDuration(estimatedMinutes);
+    }
+  }, [estimatedMinutes, setPomodoroDuration, status]);
 
   // Pomodoro phase completion
   useEffect(() => {
@@ -158,6 +166,9 @@ export function FocusTimer({ nodeId }: FocusTimerProps) {
             <p className="text-sm text-muted-foreground mt-1">
               {pomodoroPhase === 'work' ? '집중 시간' : '휴식 시간'}
             </p>
+          )}
+          {timerType === 'pomodoro' && estimatedMinutes && (
+            <p className="text-sm text-muted-foreground mt-1">설정된 예상 시간 기준으로 진행됩니다.</p>
           )}
         </div>
 

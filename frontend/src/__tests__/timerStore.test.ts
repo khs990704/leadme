@@ -11,6 +11,7 @@ describe('useTimerStore', () => {
       nodeId: null,
       pomodoroCount: 0,
       pomodoroPhase: 'work',
+      pomodoroWorkSeconds: 25 * 60,
     });
   });
 
@@ -36,6 +37,26 @@ describe('useTimerStore', () => {
       expect(state.nodeId).toBe('node-1');
       expect(state.elapsed).toBe(0);
       expect(state.pomodoroPhase).toBe('work');
+    });
+  });
+
+  describe('setPomodoroDuration', () => {
+    it('should set pomodoro duration from numeric minutes', () => {
+      useTimerStore.getState().setPomodoroDuration(60);
+
+      expect(useTimerStore.getState().pomodoroWorkSeconds).toBe(60 * 60);
+    });
+
+    it('should parse hour and minute strings', () => {
+      useTimerStore.getState().setPomodoroDuration('1시간 30분');
+
+      expect(useTimerStore.getState().pomodoroWorkSeconds).toBe(90 * 60);
+    });
+
+    it('should fall back to default when input is invalid', () => {
+      useTimerStore.getState().setPomodoroDuration('알 수 없음');
+
+      expect(useTimerStore.getState().pomodoroWorkSeconds).toBe(25 * 60);
     });
   });
 
@@ -156,21 +177,22 @@ describe('useTimerStore', () => {
   });
 
   describe('getPomodoroRemaining', () => {
-    it('should return 25 minutes for work phase at start', () => {
+    it('should return configured work minutes for work phase at start', () => {
+      useTimerStore.getState().setPomodoroDuration(60);
       useTimerStore.getState().startTimer('session-1', 'node-1');
 
       const remaining = useTimerStore.getState().getPomodoroRemaining();
-      expect(remaining).toBe(25 * 60); // 1500 seconds
+      expect(remaining).toBe(60 * 60);
     });
 
     it('should decrease remaining as elapsed increases', () => {
+      useTimerStore.getState().setPomodoroDuration(60);
       useTimerStore.getState().startTimer('session-1', 'node-1');
 
-      // Simulate 5 minutes elapsed
       useTimerStore.setState({ elapsed: 5 * 60 });
 
       const remaining = useTimerStore.getState().getPomodoroRemaining();
-      expect(remaining).toBe(20 * 60); // 20 minutes remaining
+      expect(remaining).toBe(55 * 60);
     });
 
     it('should return 5 minutes for break phase at start', () => {
@@ -191,8 +213,10 @@ describe('useTimerStore', () => {
   });
 
   describe('getPomodoroTotal', () => {
-    it('should return 25 minutes for work phase', () => {
-      expect(useTimerStore.getState().getPomodoroTotal()).toBe(25 * 60);
+    it('should return configured work minutes for work phase', () => {
+      useTimerStore.getState().setPomodoroDuration(60);
+
+      expect(useTimerStore.getState().getPomodoroTotal()).toBe(60 * 60);
     });
 
     it('should return 5 minutes for break phase', () => {

@@ -72,7 +72,7 @@ export function NodePage() {
       <StudyGuide guide={node.studyGuide} />
 
       {/* Focus Timer */}
-      <FocusTimer nodeId={node.id} />
+      <FocusTimer nodeId={node.id} estimatedMinutes={node.estimatedMinutes} />
 
       {/* Status Recorder */}
       <StatusRecorder />

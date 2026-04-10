@@ -1,10 +1,41 @@
 import { create } from 'zustand';
 import type { TimerType, SessionStatus } from '@/types/api';
 
-const POMODORO_WORK = 25 * 60;
+const DEFAULT_POMODORO_WORK = 25 * 60;
 const POMODORO_BREAK = 5 * 60;
+const MINUTE_IN_SECONDS = 60;
 
 type PomodoroPhase = 'work' | 'break';
+
+function parseDurationInputToSeconds(duration: number | string | null | undefined): number | null {
+  if (typeof duration === 'number' && Number.isFinite(duration) && duration > 0) {
+    return Math.round(duration * MINUTE_IN_SECONDS);
+  }
+
+  if (typeof duration !== 'string') return null;
+
+  const normalized = duration.trim().toLowerCase();
+  if (!normalized) return null;
+
+  let totalMinutes = 0;
+
+  const hourMatches = normalized.matchAll(/(\d+(?:\.\d+)?)\s*(?:시간|hour|hours|hr|hrs|h)/g);
+  for (const match of hourMatches) {
+    totalMinutes += Math.round(Number(match[1]) * 60);
+  }
+
+  const minuteMatches = normalized.matchAll(/(\d+(?:\.\d+)?)\s*(?:분|minute|minutes|min|mins|m)/g);
+  for (const match of minuteMatches) {
+    totalMinutes += Math.round(Number(match[1]));
+  }
+
+  if (totalMinutes > 0) return totalMinutes * MINUTE_IN_SECONDS;
+
+  const fallbackMinutes = Number(normalized.replace(/[^\d.]/g, ''));
+  return Number.isFinite(fallbackMinutes) && fallbackMinutes > 0
+    ? Math.round(fallbackMinutes * MINUTE_IN_SECONDS)
+    : null;
+}
 
 interface TimerState {
   timerType: TimerType;
@@ -14,8 +45,10 @@ interface TimerState {
   nodeId: string | null;
   pomodoroCount: number;
   pomodoroPhase: PomodoroPhase;
+  pomodoroWorkSeconds: number;
 
   setTimerType: (type: TimerType) => void;
+  setPomodoroDuration: (duration: number | string | null | undefined) => void;
   startTimer: (sessionId: string, nodeId: string) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
@@ -36,8 +69,16 @@ export const useTimerStore = create<TimerState>((set, get) => ({
   nodeId: null,
   pomodoroCount: 0,
   pomodoroPhase: 'work',
+  pomodoroWorkSeconds: DEFAULT_POMODORO_WORK,
 
   setTimerType: (type) => set({ timerType: type }),
+
+  setPomodoroDuration: (duration) => {
+    const parsedSeconds = parseDurationInputToSeconds(duration);
+    set({
+      pomodoroWorkSeconds: parsedSeconds ?? DEFAULT_POMODORO_WORK,
+    });
+  },
 
   startTimer: (sessionId, nodeId) =>
     set({
@@ -90,12 +131,12 @@ export const useTimerStore = create<TimerState>((set, get) => ({
 
   getPomodoroRemaining: () => {
     const state = get();
-    const total = state.pomodoroPhase === 'work' ? POMODORO_WORK : POMODORO_BREAK;
+    const total = state.pomodoroPhase === 'work' ? state.pomodoroWorkSeconds : POMODORO_BREAK;
     return Math.max(0, total - state.elapsed);
   },
 
   getPomodoroTotal: () => {
     const state = get();
-    return state.pomodoroPhase === 'work' ? POMODORO_WORK : POMODORO_BREAK;
+    return state.pomodoroPhase === 'work' ? state.pomodoroWorkSeconds : POMODORO_BREAK;
   },
 }));
