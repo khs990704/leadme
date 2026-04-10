@@ -49,6 +49,12 @@ interface TimerState {
 
   setTimerType: (type: TimerType) => void;
   setPomodoroDuration: (duration: number | string | null | undefined) => void;
+  restoreTimer: (
+    sessionId: string,
+    nodeId: string,
+    timerType: TimerType,
+    startedAt: string,
+  ) => void;
   startTimer: (sessionId: string, nodeId: string) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
@@ -77,6 +83,23 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     const parsedSeconds = parseDurationInputToSeconds(duration);
     set({
       pomodoroWorkSeconds: parsedSeconds ?? DEFAULT_POMODORO_WORK,
+    });
+  },
+
+  restoreTimer: (sessionId, nodeId, timerType, startedAt) => {
+    const parsedStartedAt = new Date(startedAt);
+    const startedAtMs = parsedStartedAt.getTime();
+    const elapsedSeconds = Number.isNaN(startedAtMs)
+      ? 0
+      : Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000));
+
+    set({
+      timerType,
+      status: 'active',
+      sessionId,
+      nodeId,
+      elapsed: elapsedSeconds,
+      pomodoroPhase: 'work',
     });
   },
 

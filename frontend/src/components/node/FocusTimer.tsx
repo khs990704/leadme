@@ -10,9 +10,15 @@ import type { TimerType } from '@/types/api';
 interface FocusTimerProps {
   nodeId: string;
   estimatedMinutes?: number | string | null;
+  activeSession?: {
+    id: string;
+    timerType: TimerType;
+    startTime: string;
+    status: 'active' | 'paused' | 'completed';
+  } | null;
 }
 
-export function FocusTimer({ nodeId, estimatedMinutes }: FocusTimerProps) {
+export function FocusTimer({ nodeId, estimatedMinutes, activeSession }: FocusTimerProps) {
   const {
     timerType,
     status,
@@ -21,6 +27,7 @@ export function FocusTimer({ nodeId, estimatedMinutes }: FocusTimerProps) {
     pomodoroPhase,
     setTimerType,
     setPomodoroDuration,
+    restoreTimer,
     startTimer,
     pauseTimer,
     resumeTimer,
@@ -55,6 +62,19 @@ export function FocusTimer({ nodeId, estimatedMinutes }: FocusTimerProps) {
       setPomodoroDuration(estimatedMinutes);
     }
   }, [estimatedMinutes, setPomodoroDuration, status]);
+
+  useEffect(() => {
+    if (!activeSession) return;
+    if (activeSession.status !== 'active') return;
+    if (sessionId === activeSession.id && status === 'active') return;
+
+    restoreTimer(
+      activeSession.id,
+      nodeId,
+      activeSession.timerType,
+      activeSession.startTime,
+    );
+  }, [activeSession, nodeId, restoreTimer, sessionId, status]);
 
   // Pomodoro phase completion
   useEffect(() => {

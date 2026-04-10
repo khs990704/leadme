@@ -60,6 +60,21 @@ describe('useTimerStore', () => {
     });
   });
 
+  describe('restoreTimer', () => {
+    it('should restore an active timer from server session data', () => {
+      const startedAt = new Date(Date.now() - 90 * 1000).toISOString();
+
+      useTimerStore.getState().restoreTimer('session-1', 'node-1', 'stopwatch', startedAt);
+
+      const state = useTimerStore.getState();
+      expect(state.status).toBe('active');
+      expect(state.sessionId).toBe('session-1');
+      expect(state.nodeId).toBe('node-1');
+      expect(state.timerType).toBe('stopwatch');
+      expect(state.elapsed).toBeGreaterThanOrEqual(90);
+    });
+  });
+
   describe('pauseTimer', () => {
     it('should set status to paused', () => {
       useTimerStore.getState().startTimer('session-1', 'node-1');
