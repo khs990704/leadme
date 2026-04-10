@@ -1,4 +1,4 @@
-import { PlanParams } from '../types/index.js';
+import { PlanParams } from '../types/index';
 
 export function buildStructurerPrompt(params: PlanParams): string {
   const material = params.studyMaterial;

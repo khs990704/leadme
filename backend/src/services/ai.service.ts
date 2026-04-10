@@ -1,9 +1,9 @@
-import { env } from '../config/env.js';
-import { AppError, AIGeneratedPlan, AIFeedbackResult } from '../types/index.js';
-import { buildPlannerPrompt } from '../prompts/planner.js';
-import { buildCoachPrompt, CoachContext } from '../prompts/coach.js';
-import { buildStructurerPrompt } from '../prompts/structurer.js';
-import { PlanParams } from '../types/index.js';
+import { env } from '../config/env';
+import { AppError, AIGeneratedPlan, AIFeedbackResult } from '../types/index';
+import { buildPlannerPrompt } from '../prompts/planner';
+import { buildCoachPrompt, CoachContext } from '../prompts/coach';
+import { buildStructurerPrompt } from '../prompts/structurer';
+import { PlanParams } from '../types/index';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const REQUEST_TIMEOUT = 180000; // 180 seconds (free models can be slow)

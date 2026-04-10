@@ -2,11 +2,11 @@ import { Router, Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { env } from '../config/env.js';
-import { prisma } from '../lib/prisma.js';
-import { validate } from '../middleware/validate.js';
-import { authenticate } from '../middleware/auth.js';
-import { AppError, AuthenticatedRequest, JwtPayload } from '../types/index.js';
+import { env } from '../config/env';
+import { prisma } from '../lib/prisma';
+import { validate } from '../middleware/validate';
+import { authenticate } from '../middleware/auth';
+import { AppError, AuthenticatedRequest, JwtPayload } from '../types/index';
 
 const router = Router();
 

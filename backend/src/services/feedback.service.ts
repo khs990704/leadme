@@ -1,7 +1,7 @@
-import { prisma } from '../lib/prisma.js';
-import { AppError, PlanParams } from '../types/index.js';
-import { generateFeedback } from './ai.service.js';
-import { CoachContext } from '../prompts/coach.js';
+import { prisma } from '../lib/prisma';
+import { AppError, PlanParams } from '../types/index';
+import { generateFeedback } from './ai.service';
+import { CoachContext } from '../prompts/coach';
 
 export async function generateNodeFeedback(nodeId: string, userId: string) {
   const node = await prisma.todoNode.findUnique({

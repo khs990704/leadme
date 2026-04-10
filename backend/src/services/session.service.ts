@@ -1,5 +1,5 @@
-import { prisma } from '../lib/prisma.js';
-import { AppError } from '../types/index.js';
+import { prisma } from '../lib/prisma';
+import { AppError } from '../types/index';
 
 export async function createSession(
   userId: string,
