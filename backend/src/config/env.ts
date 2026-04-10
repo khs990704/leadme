@@ -20,7 +20,10 @@ const envSchema = z.object({
 
   // OpenRouter AI
   OPENROUTER_API_KEY: z.string().min(1, 'OPENROUTER_API_KEY is required'),
-  OPENROUTER_MODEL: z.string().default('google/gemma-4-26b-a4b-it:free'),
+  OPENROUTER_MODEL: z.string().default('qwen/qwen3-next-80b-a3b-instruct:free'),
+  OPENROUTER_FALLBACK_MODELS: z
+    .string()
+    .default('openai/gpt-oss-20b:free,google/gemma-4-26b-a4b-it:free'),
   OPENROUTER_BASE_URL: z.string().default('https://openrouter.ai/api/v1'),
 
   // App

@@ -21,7 +21,62 @@ interface OpenRouterResponse {
   }>;
 }
 
-async function callOpenRouter(messages: OpenRouterMessage[], temperature = 0.7): Promise<string> {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function getCandidateModels(): string[] {
+  const fallbacks = env.OPENROUTER_FALLBACK_MODELS
+    .split(',')
+    .map((model) => model.trim())
+    .filter(Boolean);
+
+  return [env.OPENROUTER_MODEL, ...fallbacks].filter(
+    (model, index, models) => models.indexOf(model) === index,
+  );
+}
+
+function isRetriableModelError(err: unknown): boolean {
+  return (
+    err instanceof AppError &&
+    err.code === 'AI_SERVICE_UNAVAILABLE' &&
+    (err.statusCode === 429 || err.statusCode === 503)
+  );
+}
+
+function getBackoffDelayMs(attempt: number): number {
+  const baseDelayMs = 1000 * (attempt + 1);
+  const jitterMs = Math.floor(Math.random() * 700);
+  return baseDelayMs + jitterMs;
+}
+
+function buildOpenRouterPayload(
+  model: string,
+  messages: OpenRouterMessage[],
+  temperature: number,
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    model,
+    messages,
+    temperature,
+    max_tokens: 4096,
+    response_format: { type: 'json_object' },
+    plugins: [{ id: 'response-healing' }],
+  };
+
+  // Some free models, such as gpt-oss on OpenRouter, reject reasoning: none.
+  if (!model.includes('gpt-oss')) {
+    payload.reasoning = { effort: 'none' };
+  }
+
+  return payload;
+}
+
+async function callOpenRouter(
+  model: string,
+  messages: OpenRouterMessage[],
+  temperature = 0.7,
+): Promise<string> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
@@ -34,23 +89,16 @@ async function callOpenRouter(messages: OpenRouterMessage[], temperature = 0.7):
         'HTTP-Referer': 'https://leadme.app',
         'X-Title': 'LeadMe',
       },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL,
-        messages,
-        temperature,
-        max_tokens: 4096,
-        response_format: { type: 'json_object' },
-        reasoning: { effort: 'none' },
-      }),
+      body: JSON.stringify(buildOpenRouterPayload(model, messages, temperature)),
       signal: controller.signal,
     });
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error');
       throw new AppError(
-        503,
+        response.status,
         'AI_SERVICE_UNAVAILABLE',
-        `OpenRouter API returned ${response.status}: ${errorText}`,
+        `OpenRouter API returned ${response.status} for ${model}: ${errorText}`,
       );
     }
 
@@ -124,19 +172,43 @@ export async function generatePlan(
 
   const temperature = mode === 'basic' ? 0.7 : 0.3;
   let lastError: Error | null = null;
+  let retriableFailureCount = 0;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const content = await callOpenRouter(messages, temperature);
-    try {
-      const plan = parseJSON<AIGeneratedPlan>(content);
-      if (!plan.macroGoals || !Array.isArray(plan.macroGoals) || plan.macroGoals.length === 0) {
-        throw new AppError(502, 'AI_SERVICE_ERROR', 'Invalid plan structure from AI');
+  for (const model of getCandidateModels()) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const content = await callOpenRouter(model, messages, temperature);
+        const plan = parseJSON<AIGeneratedPlan>(content);
+        if (!plan.macroGoals || !Array.isArray(plan.macroGoals) || plan.macroGoals.length === 0) {
+          throw new AppError(502, 'AI_SERVICE_ERROR', 'Invalid plan structure from AI');
+        }
+        return plan;
+      } catch (err) {
+        lastError = err as Error;
+
+        // Retry parse failures once on the same model.
+        if (attempt === 0 && err instanceof AppError && err.code === 'AI_SERVICE_ERROR') {
+          continue;
+        }
+
+        // Fall through to the next model for provider congestion or shared free-tier limits.
+        if (isRetriableModelError(err)) {
+          retriableFailureCount += 1;
+          await sleep(getBackoffDelayMs(attempt));
+          break;
+        }
+
+        throw err;
       }
-      return plan;
-    } catch (err) {
-      lastError = err as Error;
-      if (attempt === 0) continue; // retry once on parse failure
     }
+  }
+
+  if (retriableFailureCount > 0) {
+    throw new AppError(
+      503,
+      'AI_SERVICE_UNAVAILABLE',
+      '무료 AI 모델이 현재 혼잡합니다. 잠시 후 다시 시도해주세요.',
+    );
   }
 
   throw lastError!;
@@ -156,19 +228,41 @@ export async function generateFeedback(
   ];
 
   let lastError: Error | null = null;
+  let retriableFailureCount = 0;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const content = await callOpenRouter(messages, 0.8);
-    try {
-      const feedback = parseJSON<AIFeedbackResult>(content);
-      if (!feedback.summary) {
-        throw new AppError(502, 'AI_SERVICE_ERROR', 'Invalid feedback structure from AI');
+  for (const model of getCandidateModels()) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const content = await callOpenRouter(model, messages, 0.8);
+        const feedback = parseJSON<AIFeedbackResult>(content);
+        if (!feedback.summary) {
+          throw new AppError(502, 'AI_SERVICE_ERROR', 'Invalid feedback structure from AI');
+        }
+        return feedback;
+      } catch (err) {
+        lastError = err as Error;
+
+        if (attempt === 0 && err instanceof AppError && err.code === 'AI_SERVICE_ERROR') {
+          continue;
+        }
+
+        if (isRetriableModelError(err)) {
+          retriableFailureCount += 1;
+          await sleep(getBackoffDelayMs(attempt));
+          break;
+        }
+
+        throw err;
       }
-      return feedback;
-    } catch (err) {
-      lastError = err as Error;
-      if (attempt === 0) continue;
     }
+  }
+
+  if (retriableFailureCount > 0) {
+    throw new AppError(
+      503,
+      'AI_SERVICE_UNAVAILABLE',
+      '무료 AI 모델이 현재 혼잡합니다. 잠시 후 다시 시도해주세요.',
+    );
   }
 
   throw lastError!;
